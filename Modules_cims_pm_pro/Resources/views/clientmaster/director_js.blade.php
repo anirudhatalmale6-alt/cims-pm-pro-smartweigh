@@ -504,7 +504,8 @@
 
             savedDirectors.forEach(director => {
                 const isDefault = !!director.is_default;
-                const statusBadge = '<span class="badge bg-success">' + director.director_status_name + '</span>';
+                const statusColor = String(director.director_status_id) === '1' ? '#28a745' : '#dc3545';
+                const statusBadge = `<span class="badge font-18" style="background:${statusColor}; color:#fff; padding:6px 14px; border-radius:50px;">${director.director_status_name}</span>`;
                 // const cimsDocViewBaseUrl = "{{ url('cimsdocmanager/view') }}";
                 
                 // const viewFileButton = bank.document
@@ -527,7 +528,7 @@
 
                 const date_resigned = director.date_resigned ? `<dt style="width:14rem">Date Resigned:</dt><dd>${formatDateDisplay(director.date_resigned)}</dd>` : '' ;
                 
-                const number_of_director_shares = director.director_type_id == 1 ? `<dt style="width:14rem">Number of Shares:</dt><dd>${director.number_of_director_shares}</dd>` : '';
+                const number_of_director_shares = director.director_type_id == 1 ? `<dt style="width:14rem">Shares:</dt><dd>${director.number_of_director_shares}</dd>` : '';
 
                 const updateBtn = (typeof isEditMode !== 'undefined' && isEditMode && director.is_existing && !director.is_deleted)
                     ? `<button type="button" class="btn btn-primary btn-sm edit-director edit-card" data-director-id="${director.id}">
