@@ -24,7 +24,7 @@
     @endif
 
     <input type="hidden" id="{{ $componentId }}" name="{{ $name }}" value="{{ old($name, $value) }}">
-    <div class="input-group">
+    <div style="position:relative; display:flex; align-items:stretch;">
         <input
             type="text"
             id="{{ $displayId }}"
@@ -35,12 +35,12 @@
             inputmode="text"
             {{ $required ? 'required' : '' }}
             {{ $attributes }}
-            style="border-right:none !important; border-radius:8px 0 0 8px !important;"
+            style="border-top-right-radius:0 !important; border-bottom-right-radius:0 !important; border-right:none !important;"
         >
-        <span class="input-group-text" id="{{ $componentId }}_toggle" title="Show/Hide password"
-              style="cursor:pointer; background:linear-gradient(135deg, #0d3d56 0%, #1496bb 100%); border:2px solid #17A2B8; border-left:none; color:#fff; font-size:18px; min-width:48px; display:flex; align-items:center; justify-content:center; border-radius:0 8px 8px 0 !important;">
+        <button type="button" id="{{ $componentId }}_toggle" title="Show/Hide password" tabindex="-1"
+                style="display:flex; align-items:center; justify-content:center; min-width:48px; padding:0 14px; border:2px solid #17A2B8; border-left:none; border-radius:0 8px 8px 0; background:linear-gradient(135deg, #0d3d56 0%, #1496bb 100%); color:#fff; font-size:18px; cursor:pointer; outline:none; transition:all 0.2s ease;">
             <i class="fa fa-eye" id="{{ $componentId }}_toggle_icon"></i>
-        </span>
+        </button>
     </div>
 </div>
 
