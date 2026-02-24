@@ -5,7 +5,7 @@
 
         let editingDirectorId = null;
         const appBasePath = "{{ rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?? '', '/') }}";
-        const directorUpdateBaseUrl = `${appBasePath}/ajax/directors`;
+        const directorUpdateBaseUrl = `{{ route('ajax.directors.update', ['directorId' => 'PLACEHOLDER']) }}`.replace('/PLACEHOLDER', '');
         // ── Initialize with existing banks if provided ──
         const existingDirectors = {!! isset($existingDirectors) ? json_encode($existingDirectors) : '[]' !!};
         if (existingDirectors && existingDirectors.length > 0) {
