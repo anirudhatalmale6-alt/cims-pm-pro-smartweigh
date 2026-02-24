@@ -736,13 +736,14 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="sars_otp_mobile" class="form-label">Mobile for SARS OTP</label>
-                                            <input type="tel" id="sars_otp_mobile" name="sars_otp_mobile" class="form-control" value="{{ old('sars_otp_mobile', $client->sars_otp_mobile ?? '') }}">
+                                            <input type="tel" id="sars_otp_mobile" name="sars_otp_mobile" class="form-control sd_highlight" value="{{ old('sars_otp_mobile', $client->sars_otp_mobile ?? '') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="sars_otp_email" class="form-label">Email for SARS OTP</label>
-                                            <input type="email" id="sars_otp_email" name="sars_otp_email" class="form-control" value="{{ old('sars_otp_email', $client->sars_otp_email ?? '') }}">
+                                            <input type="email" id="sars_otp_email" name="sars_otp_email" class="form-control email_validation" value="{{ old('sars_otp_email', $client->sars_otp_email ?? '') }}">
+                                            <small class="email-error-msg text-danger" id="sars_otp_email_error" style="display:none;">Please enter a valid email address</small>
                                         </div>
                                     </div>
                                 </div>
@@ -2043,6 +2044,39 @@ $(function() {
     $('#sars_rep_tax_number').on('input', function() {
         sd_10_digit(this, 10);
     });
+
+    $('#sars_otp_mobile').on('input', function() {
+        sd_10_digit(this, 10);
+    });
+    // Format existing value on page load
+    if ($('#sars_otp_mobile').val()) {
+        sd_10_digit($('#sars_otp_mobile')[0], 10);
+    }
+
+    // Email validation for SARS OTP email
+    function validateSarsEmail() {
+        var $field = $('#sars_otp_email');
+        var val = $field.val().trim();
+        var $error = $('#sars_otp_email_error');
+        if (val === '') {
+            $field.removeClass('is-valid is-invalid');
+            $error.hide();
+            return;
+        }
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (emailRegex.test(val)) {
+            $field.removeClass('is-invalid').addClass('is-valid');
+            $error.hide();
+        } else {
+            $field.removeClass('is-valid').addClass('is-invalid');
+            $error.show();
+        }
+    }
+    $('#sars_otp_email').on('blur', validateSarsEmail);
+    // Validate existing value on page load
+    if ($('#sars_otp_email').val()) {
+        validateSarsEmail();
+    }
 
     $('#website').on('input', function () {
         $(this).val($(this).val().toLowerCase());
