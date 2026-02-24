@@ -241,7 +241,7 @@
                 const isDefault = !!bank.is_default;
                 // const hasFile = bankFiles[bank.id] ? '<span class="badge bg-primary ms-1"><i class="fa fa-file-pdf text-white"></i></span>' : (bank.has_file ? '<span class="badge bg-success ms-1"><i class="fa fa-file-pdf text-white"></i> Existing</span>' : '');
                 const statusBadge = '<span class="badge bg-success">' + bank.bank_account_status_name + '</span>';
-                const cimsDocViewBaseUrl = "{{ url('cimsdocmanager/view') }}";
+                const cimsDocViewBaseUrl = "{{ route('cimsdocmanager.view', ['document' => 'PLACEHOLDER']) }}".replace('/PLACEHOLDER', '');
                 
                 const viewFileButton = bank.document
                 ? ` <span class="badge bg-primary sd_background_pink">
