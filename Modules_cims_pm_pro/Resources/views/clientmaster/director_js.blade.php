@@ -68,6 +68,9 @@
             editingDirectorId = director.id;
             setDirectorModalMode('update');
 
+            $('#director-form').show();
+            $('#save-director-btn').show();
+
             if ($.fn.selectpicker) {
                 $('#person_id').selectpicker('val', String(director.person_id || ''));
                 $('#director_type').selectpicker('val', String(director.director_type_id || ''));
