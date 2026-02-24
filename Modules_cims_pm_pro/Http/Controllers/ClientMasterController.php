@@ -958,6 +958,22 @@ class ClientMasterController extends Controller
     }
 
     /**
+     * Get address details by ID (AJAX)
+     */
+    public function get_address($id)
+    {
+        $address = Address::find($id);
+
+        if (!$address) {
+            return response()->json(['error' => 'Address not found'], 404);
+        }
+
+        return response()->json([
+            'address' => $address,
+        ]);
+    }
+
+    /**
      * Update an existing director (AJAX) - edit form only
      */
     public function updateDirector(Request $request, int $directorId): JsonResponse
