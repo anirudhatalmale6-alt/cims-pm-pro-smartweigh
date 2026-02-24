@@ -9,7 +9,13 @@ class ClientMasterAddress extends Model
     protected $table = 'client_master_addresses';
 
     protected $fillable = [
-        'client_id', 'address_id', 'address_type', 'is_checked', 'is_default'
+        'client_id', 'address_id', 'address_type', 'is_checked', 'is_default',
+        'address_type_id', 'address_type_name',
+        'unit_number', 'complex_name', 'street_number', 'street_name',
+        'suburb', 'city', 'postal_code', 'province',
+        'municipality', 'ward', 'country',
+        'long_address', 'google_address',
+        'latitude', 'longitude', 'map_url',
     ];
 
     public function client()
