@@ -24,7 +24,7 @@
     @endif
 
     <input type="hidden" id="{{ $componentId }}" name="{{ $name }}" value="{{ old($name, $value) }}">
-    <div style="position:relative;">
+    <div class="input-group">
         <input
             type="text"
             id="{{ $displayId }}"
@@ -33,12 +33,12 @@
             autocomplete="{{ $autocomplete }}"
             spellcheck="false"
             inputmode="text"
-            style="padding-right:40px;"
             {{ $required ? 'required' : '' }}
             {{ $attributes }}
+            style="border-right:none !important; border-radius:8px 0 0 8px !important;"
         >
-        <span id="{{ $componentId }}_toggle" tabindex="-1" title="Show/Hide password"
-              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); cursor:pointer; color:#6c757d; font-size:16px; z-index:5;">
+        <span class="input-group-text" id="{{ $componentId }}_toggle" title="Show/Hide password"
+              style="cursor:pointer; background:linear-gradient(135deg, #0d3d56 0%, #1496bb 100%); border:2px solid #17A2B8; border-left:none; color:#fff; font-size:18px; min-width:48px; display:flex; align-items:center; justify-content:center; border-radius:0 8px 8px 0 !important;">
             <i class="fa fa-eye" id="{{ $componentId }}_toggle_icon"></i>
         </span>
     </div>
@@ -109,11 +109,14 @@ $(function() {
     $('#{{ $componentId }}_toggle').on('click', function() {
         revealed_{{ $safeId }} = !revealed_{{ $safeId }};
         var $icon = $('#{{ $componentId }}_toggle_icon');
+        var $btn = $(this);
         if (revealed_{{ $safeId }}) {
             $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            $btn.css('background', 'linear-gradient(135deg, #1496bb 0%, #17A2B8 100%)');
             $display.val($hidden.val());
         } else {
             $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            $btn.css('background', 'linear-gradient(135deg, #0d3d56 0%, #1496bb 100%)');
             $display.val(mask_{{ $safeId }}($hidden.val()));
         }
     });
