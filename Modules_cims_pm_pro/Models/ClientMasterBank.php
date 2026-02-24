@@ -27,6 +27,13 @@ class ClientMasterBank extends Model
         'confirmation_of_banking_uploaded',
         'is_active',
         'is_checked',
+        'bank_account_status_id',
+        'bank_account_status_name',
+        'bank_statement_frequency_id',
+        'bank_statement_frequency_name',
+        'bank_statement_cut_off_date',
+        'is_default',
+        'document_id',
     ];
 
     protected $casts = [

@@ -20,12 +20,7 @@
         // Display banks on page load
         displaySavedBanks();
 
-        // ── Save Bank Button ──
-        $(document).on('click', '#save-bank-btn', function() {
-            if (validateBankForm()) {
-                saveBank();
-            }
-        });
+        // ── Save Bank Button (handled below with edit mode support) ──
 
 
         // ══════════════════════════════════════
@@ -212,6 +207,8 @@
 
         $('#bankModal').on('hidden.bs.modal', function() {
             clearBankForm();
+            editingBankId = null;
+            $('#save-bank-btn').text('Save Bank');
         });
 
         $('#bankModal').on('show.bs.modal', function(event) {
@@ -255,10 +252,8 @@
                 const deletedClass = bank.is_deleted ? 'opacity-50 text-decoration-line-through' : '';
                 const deleteButtonText = bank.is_deleted ? '<i class="fa fa-undo"></i> Restore' : '<i class="fa fa-trash"></i> Delete';
                 const deleteButtonClass = bank.is_deleted ? 'btn-warning' : 'btn-danger';
-                // const deletebtn =  `<button type="button" class="delete-card delete-bank ${deleteButtonClass}" title="${bank.is_deleted ? 'Restore bank' : 'Delete bank'}" data-bank-id="${bank.id}">
-                //                             ${deleteButtonText}
-                //                         </button>` // Delete Button Removed as per new design
-                const deletebtn = '';
+                const editbtn = bank.is_deleted ? '' : `<button type="button" class="btn btn-sm btn-outline-primary edit-bank me-1" title="Edit bank" data-bank-id="${bank.id}"><i class="fa fa-pencil"></i> Edit</button>`;
+                const deletebtn = `<button type="button" class="btn btn-sm ${deleteButtonClass} delete-bank" title="${bank.is_deleted ? 'Restore bank' : 'Delete bank'}" data-bank-id="${bank.id}">${deleteButtonText}</button>`;
                  // <div class="col-md-2 d-flex align-items-center justify-content-start">
                 //     <input type="checkbox" class="bank-checkbox multi-card-checkbox"
                 //         data-bank-id="${bank.id}" ${isSelected ? 'checked' : ''}>
@@ -291,8 +286,10 @@
                                                 </div>
                                                 ${viewFileButton}
                                             </div>
+                                            <div class="d-flex gap-1 mt-2">
+                                                ${editbtn}${deletebtn}
+                                            </div>
                                         </div>
-                                        ${deletebtn}
                                     </div>
                                 </div>
                             </div>
@@ -319,27 +316,200 @@
             e.stopPropagation();
             const bankId = $(this).data('bank-id');
             const bank = savedBanks.find(b => b.id === bankId);
-            
+
             if (bank.is_existing) {
-                // Toggle is_deleted flag for existing banks
-                bank.is_deleted = !bank.is_deleted;
-                if (bank.is_deleted) {
-                    deletedBankIds.push(bank.db_id);
-                    toastr.info('Bank marked for deletion');
-                } else {
-                    deletedBankIds = deletedBankIds.filter(id => id !== bank.db_id);
-                    toastr.info('Bank restored');
+                if (!bank.is_deleted) {
+                    if (!confirm('Are you sure you want to delete this bank account?')) return;
+                    // AJAX delete for existing banks
+                    const deleteUrl = `{{ route('ajax.banks.delete', ['bankId' => 'PLACEHOLDER']) }}`.replace('PLACEHOLDER', bank.db_id || bank.id);
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success: function() {
+                            savedBanks = savedBanks.filter(b => b.id !== bankId);
+                            displaySavedBanks();
+                            toastr.success('Bank deleted successfully');
+                        },
+                        error: function() {
+                            toastr.error('Failed to delete bank');
+                        }
+                    });
                 }
             } else {
                 // Remove new banks immediately
                 savedBanks = savedBanks.filter(b => b.id !== bankId);
                 delete bankFiles[bankId];
                 toastr.info('Bank removed');
+                displaySavedBanks();
             }
-            displaySavedBanks();
         });
 
-       
+        // ── Edit bank card ──
+        var editingBankId = null;
+        const bankUpdateBaseUrl = `{{ route('ajax.banks.update', ['bankId' => 'PLACEHOLDER']) }}`.replace('/PLACEHOLDER', '');
+
+        $(document).on('click', '.edit-bank', function(e) {
+            e.stopPropagation();
+            const bankId = $(this).data('bank-id');
+            const bank = savedBanks.find(b => b.id === bankId);
+            if (!bank) return;
+
+            editingBankId = bankId;
+
+            // Open modal and populate fields
+            const bankModal = new bootstrap.Modal(document.getElementById('bankModal'));
+            bankModal.show();
+
+            // Wait for modal to show, then populate
+            setTimeout(function() {
+                $('#bank-form').show();
+                $('#save-bank-btn').show().text('Update Bank');
+
+                // Set bank name dropdown and trigger change to load dependent fields
+                $('#bank_name').val(bank.bank_id);
+                if ($.fn.selectpicker) $('#bank_name').selectpicker('refresh');
+
+                // Set fields directly (don't wait for AJAX since we have the data)
+                $('#bank_account_holder').val(bank.bank_account_holder);
+                $('#bank_account_number').val(bank.bank_account_number);
+                $('#bank_branch_name').val(bank.bank_branch_name);
+                $('#bank_branch_code').val(bank.bank_branch_code);
+                $('#bank_swift_code').val(bank.bank_swift_code);
+                $('#bank_account_date_opened').val(bank.bank_account_date_opened);
+                $('#bank_account_date_opened_display').val(formatDateDisplay(bank.bank_account_date_opened));
+                $('#statement_cut_off_date').val(bank.bank_statement_cut_off_date || '');
+                $('#statement_cut_off_date_display').val(bank.bank_statement_cut_off_date ? formatDateDisplay(bank.bank_statement_cut_off_date) : '');
+                $('#is_default').prop('checked', !!bank.is_default);
+
+                if (bank.bank_logo) {
+                    $('#bank_logo_display').attr('src', `{{ asset('') }}${bank.bank_logo}`);
+                    $('#bank_logo').val(bank.bank_logo);
+                }
+
+                // Trigger bank change to load dropdowns, then set values after AJAX completes
+                $('#bank_name').trigger('change');
+                setTimeout(function() {
+                    $('#bank_account_type').val(bank.bank_account_type_id);
+                    $('#account_status').val(bank.bank_account_status_id);
+                    $('#bank_statement_frequency').val(bank.bank_statement_frequency_id);
+                    if ($.fn.selectpicker) {
+                        $('#bank_account_type').selectpicker('refresh');
+                        $('#account_status').selectpicker('refresh');
+                        $('#bank_statement_frequency').selectpicker('refresh');
+                    }
+                }, 1000);
+            }, 300);
+        });
+
+        // Override save button to handle both add and update
+        $(document).off('click', '#save-bank-btn').on('click', '#save-bank-btn', function() {
+            if (editingBankId !== null) {
+                // Update mode
+                if (!validateBankFormForUpdate()) return;
+                updateExistingBank();
+            } else {
+                // Add mode
+                if (validateBankForm()) {
+                    saveBank();
+                }
+            }
+        });
+
+        function validateBankFormForUpdate() {
+            let isValid = true;
+            const fields = [
+                'bank_name', 'bank_account_holder', 'bank_account_number',
+                'bank_account_type', 'account_status', 'bank_branch_name',
+                'bank_branch_code', 'bank_swift_code', 'bank_account_date_opened','bank_statement_frequency','statement_cut_off_date'
+            ];
+            fields.forEach(field => {
+                const $field = $(`#${field}`);
+                const $error = $(`#${field}_error`);
+                const val = ($field.val() || '').trim();
+                if (!val) {
+                    $error.text('This field is required').show();
+                    isValid = false;
+                } else {
+                    $error.hide();
+                }
+            });
+            return isValid;
+        }
+
+        function updateExistingBank() {
+            const bank = savedBanks.find(b => b.id === editingBankId);
+            if (!bank) return;
+
+            const updateData = {
+                _method: 'PUT',
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                bank_id: $('#bank_name').val(),
+                bank_name: $('#bank_name option:selected').text().trim(),
+                bank_account_holder: $('#bank_account_holder').val(),
+                bank_account_number: $('#bank_account_number').val(),
+                bank_account_type_id: $('#bank_account_type').val(),
+                bank_account_type_name: $('#bank_account_type option:selected').text().trim(),
+                bank_account_status_id: $('#account_status').val(),
+                bank_account_status_name: $('#account_status option:selected').text().trim(),
+                bank_statement_frequency_id: $('#bank_statement_frequency').val(),
+                bank_statement_frequency_name: $('#bank_statement_frequency option:selected').text().trim(),
+                bank_branch_name: $('#bank_branch_name').val(),
+                bank_branch_code: $('#bank_branch_code').val(),
+                bank_swift_code: $('#bank_swift_code').val(),
+                bank_account_date_opened: $('#bank_account_date_opened').val(),
+                bank_statement_cut_off_date: $('#statement_cut_off_date').val(),
+                is_default: $('#is_default').is(':checked')
+            };
+
+            const dbId = bank.db_id || bank.id;
+            $.ajax({
+                url: bankUpdateBaseUrl + '/' + dbId,
+                type: 'POST',
+                data: updateData,
+                success: function(response) {
+                    // Update local data
+                    Object.assign(bank, {
+                        bank_id: updateData.bank_id,
+                        bank_name: updateData.bank_name,
+                        bank_account_holder: updateData.bank_account_holder,
+                        bank_account_number: updateData.bank_account_number,
+                        bank_account_type_id: updateData.bank_account_type_id,
+                        bank_account_type_name: updateData.bank_account_type_name,
+                        bank_account_status_id: updateData.bank_account_status_id,
+                        bank_account_status_name: updateData.bank_account_status_name,
+                        bank_statement_frequency_id: updateData.bank_statement_frequency_id,
+                        bank_statement_frequency_name: updateData.bank_statement_frequency_name,
+                        bank_branch_name: updateData.bank_branch_name,
+                        bank_branch_code: updateData.bank_branch_code,
+                        bank_swift_code: updateData.bank_swift_code,
+                        bank_account_date_opened: updateData.bank_account_date_opened,
+                        bank_statement_cut_off_date: updateData.bank_statement_cut_off_date,
+                        is_default: updateData.is_default,
+                        bank_logo: $('#bank_logo').val()
+                    });
+
+                    if (updateData.is_default) {
+                        savedBanks.forEach(b => { if (b.id !== editingBankId) b.is_default = false; });
+                    }
+
+                    displaySavedBanks();
+
+                    const bankModal = bootstrap.Modal.getInstance(document.getElementById('bankModal'));
+                    if (bankModal) bankModal.hide();
+
+                    clearBankForm();
+                    editingBankId = null;
+                    $('#save-bank-btn').text('Save Bank');
+                    toastr.success('Bank updated successfully!');
+                },
+                error: function(xhr) {
+                    toastr.error('Failed to update bank: ' + (xhr.responseJSON?.message || 'Unknown error'));
+                }
+            });
+        }
+
+
     });
 </script>
 @endpush

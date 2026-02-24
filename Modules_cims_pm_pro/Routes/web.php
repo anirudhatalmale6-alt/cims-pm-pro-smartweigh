@@ -16,6 +16,8 @@ Route::get('ajax/get-company-type', [ClientMasterController::class, 'getCompanyT
 Route::get('ajax/bank/{id}', [ClientMasterController::class, 'get_bank'])->name('ajax.bank.get');
 Route::get('ajax/address/{id}', [ClientMasterController::class, 'get_address'])->name('ajax.address.get');
 Route::put('ajax/directors/{directorId}', [ClientMasterController::class, 'updateDirector'])->name('ajax.directors.update');
+Route::put('ajax/banks/{bankId}', [ClientMasterController::class, 'updateBank'])->name('ajax.banks.update');
+Route::delete('ajax/banks/{bankId}', [ClientMasterController::class, 'deleteBank'])->name('ajax.banks.delete');
 Route::get('ajax/client/{id}', [ClientMasterController::class, 'get_client'])->name('ajax.client.get');
 Route::get('ajax/director/{id}', [ClientMasterController::class, 'get_director'])->name('ajax.director.get');
 

@@ -1015,6 +1015,46 @@ class ClientMasterController extends Controller
     }
 
     /**
+     * Update an existing bank account (AJAX)
+     */
+    public function updateBank(Request $request, int $bankId): JsonResponse
+    {
+        $bank = ClientMasterBank::findOrFail($bankId);
+
+        $bank->update([
+            'bank_id' => $request->input('bank_id'),
+            'bank_name' => $request->input('bank_name'),
+            'bank_account_holder' => $request->input('bank_account_holder'),
+            'bank_account_number' => $request->input('bank_account_number'),
+            'bank_account_type_id' => $request->input('bank_account_type_id'),
+            'bank_account_type_name' => $request->input('bank_account_type_name'),
+            'bank_account_status_id' => $request->input('bank_account_status_id'),
+            'bank_account_status_name' => $request->input('bank_account_status_name'),
+            'bank_branch_name' => $request->input('bank_branch_name'),
+            'bank_branch_code' => $request->input('bank_branch_code'),
+            'bank_swift_code' => $request->input('bank_swift_code'),
+            'bank_account_date_opened' => $request->input('bank_account_date_opened'),
+            'bank_statement_frequency_id' => $request->input('bank_statement_frequency_id'),
+            'bank_statement_frequency_name' => $request->input('bank_statement_frequency_name'),
+            'bank_statement_cut_off_date' => $request->input('bank_statement_cut_off_date'),
+            'is_default' => $request->input('is_default', false),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Bank updated successfully', 'bank' => $bank->fresh()]);
+    }
+
+    /**
+     * Delete (soft delete) an existing bank account (AJAX)
+     */
+    public function deleteBank(int $bankId): JsonResponse
+    {
+        $bank = ClientMasterBank::findOrFail($bankId);
+        $bank->delete();
+
+        return response()->json(['success' => true, 'message' => 'Bank deleted successfully']);
+    }
+
+    /**
      * Update an existing director (AJAX) - edit form only
      */
     public function updateDirector(Request $request, int $directorId): JsonResponse
