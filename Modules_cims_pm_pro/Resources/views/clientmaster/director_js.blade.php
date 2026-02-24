@@ -475,6 +475,17 @@
         //         toastr.warning('You can only save up to 3 Directors.');
         //     }
         // });
+        function getDirectorTypeBadge(typeId, typeName) {
+            let bgColor = '#6c757d';
+            let textColor = '#fff';
+            switch (String(typeId)) {
+                case '1': bgColor = '#0d6efd'; break;  // Blue - Director
+                case '2': bgColor = '#ffc107'; textColor = '#000'; break;  // Yellow - Incorporator
+                case '3': bgColor = '#CD006E'; break;  // Pink - SARS Representative
+            }
+            return `<span class="badge font-18" style="background:${bgColor}; color:${textColor}; padding:6px 14px; border-radius:50px;">${typeName}</span>`;
+        }
+
         // ══════════════════════════════════════
         // displaySavedDirectors — renders director cards (read-only for existing, full for new)
         // ══════════════════════════════════════
@@ -541,7 +552,7 @@
                                                 <dt style="width:14rem">Director Name:</dt><dd>${director.person_name}</dd>
                                                 <dt style="width:14rem">ID Number:</dt><dd>${director.identity_number}</dd>
                                                 <dt style="width:14rem">Address:</dt><dd>${director.address}</dd>
-                                                <dt style="width:14rem">Director Type:</dt><dd>${director.director_type_name}</dd>
+                                                <dt style="width:14rem">Director Type:</dt><dd>${getDirectorTypeBadge(director.director_type_id, director.director_type_name)}</dd>
                                                 ${number_of_director_shares}
                                                 <dt style="width:14rem">Date Engaged:</dt><dd>${formatDateDisplay(director.date_engaged)}</dd>
                                                 ${date_resigned}
