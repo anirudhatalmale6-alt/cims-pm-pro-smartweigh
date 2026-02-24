@@ -976,6 +976,45 @@ class ClientMasterController extends Controller
     }
 
     /**
+     * Get bank details by ID (AJAX) - returns branch info, account types, statuses, statement frequencies
+     */
+    public function get_bank($id)
+    {
+        $bank = RefBank::find($id);
+
+        if (!$bank) {
+            return response()->json(['error' => 'Bank not found'], 404);
+        }
+
+        // Get account types for this bank
+        $accountTypes = CimsBankAccountType::where('bank_link_id', $id)
+            ->where('is_active', 1)
+            ->get();
+
+        // Get account statuses for this bank
+        $accountStatuses = \Illuminate\Support\Facades\DB::table('cims_bank_account_status')
+            ->where('bank_link_id', $id)
+            ->where('is_active', 1)
+            ->get();
+
+        // Get statement frequencies for this bank
+        $statementFrequencies = \Illuminate\Support\Facades\DB::table('cims_bank_statement_frequency')
+            ->where('bank_link_id', $id)
+            ->where('is_active', 1)
+            ->get();
+
+        return response()->json([
+            'branch_name' => $bank->branch_name,
+            'branch_code' => $bank->branch_code,
+            'swift_code' => $bank->swift_code,
+            'bank_logo' => $bank->bank_logo,
+            'account_types' => $accountTypes,
+            'account_statuses' => $accountStatuses,
+            'banke_statement_frequencies' => $statementFrequencies,
+        ]);
+    }
+
+    /**
      * Update an existing director (AJAX) - edit form only
      */
     public function updateDirector(Request $request, int $directorId): JsonResponse
