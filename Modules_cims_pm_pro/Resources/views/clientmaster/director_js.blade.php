@@ -108,6 +108,15 @@
                 }
             }
 
+            // Populate photo and identity fields from existing director data
+            if (director.director_profile_image) {
+                $('#director_profile_image').val(director.director_profile_image);
+                $('#director_profile_image_display').attr('src', director.director_profile_image);
+            }
+            $('#identity_number').val(director.identity_number || '');
+            $('#identity_type').val(director.identity_type || '');
+            $('#nationality').val(director.nationality || '');
+
             $('#director-form .sd_tooltip_red').hide();
 
             const directorModalEl = document.getElementById('directorModal');

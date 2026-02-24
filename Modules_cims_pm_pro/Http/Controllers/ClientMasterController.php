@@ -493,6 +493,8 @@ class ClientMasterController extends Controller
                 'date_resigned' => $director->date_resigned,
                 'number_of_director_shares' => $director->number_of_director_shares,
                 'director_profile_image' => $profile_photo,
+                'identity_type' => $director->identity_type,
+                'nationality' => $director->nationality,
 
             ];
         })->toArray();
