@@ -24,7 +24,7 @@
     @endif
 
     <input type="hidden" id="{{ $componentId }}" name="{{ $name }}" value="{{ old($name, $value) }}">
-    <div class="input-group">
+    <div style="position:relative;">
         <input
             type="text"
             id="{{ $displayId }}"
@@ -33,12 +33,14 @@
             autocomplete="{{ $autocomplete }}"
             spellcheck="false"
             inputmode="text"
+            style="padding-right:40px;"
             {{ $required ? 'required' : '' }}
             {{ $attributes }}
         >
-        <button class="btn btn-outline-secondary" type="button" id="{{ $componentId }}_toggle" tabindex="-1" title="Show/Hide password">
+        <span id="{{ $componentId }}_toggle" tabindex="-1" title="Show/Hide password"
+              style="position:absolute; right:8px; top:50%; transform:translateY(-50%); cursor:pointer; color:#6c757d; font-size:16px; z-index:5;">
             <i class="fa fa-eye" id="{{ $componentId }}_toggle_icon"></i>
-        </button>
+        </span>
     </div>
 </div>
 
