@@ -1,0 +1,12 @@
+{
+    "name": "cims_pm_pro",
+    "alias": "cims_pm_pro",
+    "description": "CIMS PM Pro - Client Master Module",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\cims_pm_pro\\Providers\\ModuleServiceProvider"
+    ],
+    "files": [],
+    "requires": []
+}

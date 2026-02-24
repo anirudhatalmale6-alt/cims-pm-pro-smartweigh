@@ -1,0 +1,204 @@
+.content-body {
+    padding: 0px !important;
+}
+
+.multi-card {
+    border: 2px solid #ced4da;
+    border-radius: var(--radius-md, 0.375rem);
+    background: #ffffff;
+    transition: all var(--duration-normal, 0.2s)
+        var(--ease-standard, ease-in-out);
+    max-width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.multi-card.selected {
+    border-color: #17a2b8;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+    background: #f8fff9;
+}
+
+.multi-card:hover:hover {
+    border-color: #17a2b8;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Card body layout */
+.multi-card .card-body {
+    padding: var(--space-16, 1rem);
+    position: relative;
+}
+
+.multi-card .patient-radio {
+    width: 1.25em;
+    height: 1.25em;
+    margin-right: var(--space-12, 0.75rem);
+    accent-color: #17a2b8;
+    cursor: pointer;
+}
+
+.multi-card .card-content {
+    flex: 1;
+    padding-right: var(--space-8, 0.5rem);
+}
+
+.multi-card h5{
+    margin: 0 0 var(--space-4, 0.25rem);
+    font-size: 24px;
+    font-weight: var(--font-weight-semibold, 600);
+    color: #155724;
+}
+
+.multi-card h5 i{
+    color: #17a2b8;
+    margin-right: var(--space-4, 0.25rem);
+}
+
+.multi-card dl {
+    margin: 0;
+    font-size: 16px;
+    color: #313437;
+    line-height: var(--line-height-normal, 1.4);
+}
+
+.multi-card dt{
+    float: left;
+    clear: left;
+    width: 11rem;
+    font-weight: var(--font-weight-medium, 500);
+    color: #495057;
+}
+
+.multi-card dd {
+    margin: 0px 0 var(--space-4, 0.50rem) 14.5rem
+}
+
+/* Delete button */
+.multi-card .delete-card  {
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: var(--font-size-base, 1rem);
+    padding: var(--space-4, 0.25rem);
+    border-radius: var(--radius-sm, 0.25rem);
+    cursor: pointer;
+    transition: color var(--duration-normal, 0.2s);
+    opacity: 0;
+    position: absolute;
+    top: var(--space-8, 0.5rem);
+    right: var(--space-8, 0.5rem);
+}
+
+.multi-card .edit-card{
+    position: absolute;
+    top: var(--space-8, 0.5rem);
+    right: var(--space-8, 0.5rem);
+}
+
+.multi-card:hover .delete-card,
+.multi-card.selected .delete-card:hover  {
+    opacity: 1;
+}
+
+.multi-card .delete-card:hover {
+    color: #a71d2a;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.multi-card-checkbox{
+    box-sizing: border-box;
+    padding: 0;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    min-height: 40px;
+    box-shadow: none;
+    font-size: 16px;
+    width: 100%;
+}
+
+.bank-logo-container {
+    /* background: #f8f9fa; */
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    min-width: 60px;
+}
+
+.bank-logo-container img {
+    /* filter: brightness(0.95); */
+    transition: filter 0.3s ease;
+}
+
+/* .bank-card:hover .bank-logo-container img {
+    filter: brightness(1.1);
+} */
+
+
+.smartdash-form-card .btn-lg{
+    padding: 12px 24px !important;
+}
+
+#signatureWindow {
+    position: fixed !important;
+    top: 25% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: 90vw !important;
+    max-width: 400px !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    box-sizing: border-box !important;
+}
+
+.sd_tooltip_red{
+    font-size: 18px !important;
+}
+
+.sd_tooltip_green{
+    font-size: 18px !important;
+}
+
+.sd_color_pink{
+    color: #CD006E !important;
+}
+
+.sd_background_pink{
+    background: #CD006E !important;
+}
+
+.btn-pink{
+    background-color: #CD006E !important;
+    color:#fff !important;
+}
+
+.btn-blue{
+    background-color: #0D6EFD !important;
+    color: #fff;
+}
+
+.font-18{
+    font-size: 18px !important;
+}
+
+.font-14{
+    font-size: 14px !important;
+}
+
+.btn:disabled, .btn.disabled{
+    color: inherit !important;
+}
+
+@keyframes cims-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.refresh-btn i.sd-spin {
+    animation: cims-spin 0.8s linear infinite;
+}

@@ -1,0 +1,11 @@
+{
+    "name": "CIMSDocManager",
+    "alias": "cimsdocmanager",
+    "description": "CIMS Document Manager Module",
+    "keywords": ["cims", "documents", "files", "manager"],
+    "priority": 0,
+    "providers": [
+        "Modules\\CIMSDocManager\\Providers\\CIMSDocManagerServiceProvider"
+    ],
+    "files": []
+}
