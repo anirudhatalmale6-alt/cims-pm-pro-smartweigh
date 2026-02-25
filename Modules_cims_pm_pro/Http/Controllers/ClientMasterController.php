@@ -458,8 +458,11 @@ class ClientMasterController extends Controller
                 'bank_swift_code' => $bank->bank_swift_code,
                 'bank_logo' => $bank->bank?->bank_logo,
                 'bank_account_date_opened' => $bank->bank_account_date_opened?->format('Y-m-d'),
+                'bank_statement_frequency_id' => $bank->bank_statement_frequency_id,
+                'bank_statement_frequency_name' => $bank->bank_statement_frequency_name,
+                'bank_statement_cut_off_date' => $bank->bank_statement_cut_off_date ? (is_string($bank->bank_statement_cut_off_date) ? $bank->bank_statement_cut_off_date : $bank->bank_statement_cut_off_date->format('Y-m-d')) : null,
                 'is_default' => $bank->is_default ? true : false,
-                'document' => $document->id,
+                'document' => $document ? $document->id : null,
             ];
         })->toArray();
 
