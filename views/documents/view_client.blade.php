@@ -122,7 +122,7 @@
             <div class="doc-detail-card card">
                 <div class="card-body">
                     <div class="file-preview-box">
-                        <img src="{{ asset('images/pdf.png') }}" width="100px" class="mb-3"/>
+                        <img src="{{ asset('assets/cims_core/pdf.png') }}" width="100px" class="mb-3"/>
                         {{-- @if($file_extension === 'pdf')
                             -o
                         @elseif(in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']))

@@ -1043,6 +1043,20 @@ class ClientMasterController extends Controller
             'is_default' => $request->input('is_default', false),
         ]);
 
+        // Handle file upload if a new confirmation document was provided
+        if ($request->hasFile('confirmation_file')) {
+            $client = ClientMaster::where('client_id', $bank->client_id)->firstOrFail();
+            $documentType = DocumentType::where('doc_ref', 'BANK CONFIRM')->first();
+            $document = $this->uploadDocument($client, $request->file('confirmation_file'), $documentType);
+            $bank->document_id = $document->id;
+            $bank->confirmation_of_banking_uploaded = 1;
+            $bank->save();
+            $document->update([
+                'bank_id' => $bank->id,
+                'bank_name' => $bank->bank_name,
+            ]);
+        }
+
         return response()->json(['success' => true, 'message' => 'Bank updated successfully', 'bank' => $bank->fresh()]);
     }
 
@@ -1560,18 +1574,13 @@ class ClientMasterController extends Controller
         // Define storage path - store in client_master_docs folder
         $storagePath = 'client_master_docs/'.$client->client_code;
 
-        // Store the file
-        $filePath = $file->storeAs($storagePath, $storedFilename, 'public');
-
-        // Copy file to web-accessible location (public_path differs from actual web root on this hosting)
-        $webRootStorage = base_path('../storage/' . $storagePath);
-        if (!is_dir($webRootStorage)) {
-            mkdir($webRootStorage, 0755, true);
+        // Save directly to root-level storage (single location - where Apache serves from)
+        $fullPath = base_path('../storage/' . $storagePath);
+        if (!is_dir($fullPath)) {
+            mkdir($fullPath, 0755, true);
         }
-        $sourcePath = storage_path('app/public/' . $filePath);
-        if (file_exists($sourcePath)) {
-            copy($sourcePath, $webRootStorage . '/' . $storedFilename);
-        }
+        $file->move($fullPath, $storedFilename);
+        $filePath = $storagePath . '/' . $storedFilename;
 
         // Create the document record
         $document = Document::create([
@@ -1787,50 +1796,6 @@ class ClientMasterController extends Controller
     //     \Log::info("Processed " . count($addressesData) . " new address(es), updated existing addresses, and deleted " . count($deletedAddressIds) . " address(es) for client {$client->client_code}");
     // }
 
-    /**
-     * Upload a confirmation document for a specific bank record.
-     */
-    private function uploadBankDocument(ClientMaster $client, ClientMasterBank $bankRecord, $file): ClientMasterDocument
-    {
-        $originalFilename = $file->getClientOriginalName();
-        $extension = $file->getClientOriginalExtension();
-        $fileSize = $file->getSize();
-        $mimeType = $file->getMimeType();
-
-        $documentType = 'BANKING - Confirmation of Banking (Bank #'.$bankRecord->id.')';
-
-        $storedFilename = ClientMasterDocument::generateStoredFilename(
-            $client->client_code,
-            $documentType,
-            $extension
-        );
-
-        $storagePath = 'client_master_docs/'.$client->client_code;
-        $filePath = $file->storeAs($storagePath, $storedFilename, 'public');
-
-        // Copy file to web-accessible location (public_path differs from actual web root on this hosting)
-        $webRootStorage = base_path('../storage/' . $storagePath);
-        if (!is_dir($webRootStorage)) {
-            mkdir($webRootStorage, 0755, true);
-        }
-        $sourcePath = storage_path('app/public/' . $filePath);
-        if (file_exists($sourcePath)) {
-            copy($sourcePath, $webRootStorage . '/' . $storedFilename);
-        }
-
-        return ClientMasterDocument::create([
-            'client_id' => $client->client_id,
-            'client_code' => $client->client_code,
-            'document_type' => $documentType,
-            'original_filename' => $originalFilename,
-            'stored_filename' => $storedFilename,
-            'file_path' => $filePath,
-            'file_size' => $fileSize,
-            'mime_type' => $mimeType,
-            'uploaded_at' => now(),
-            'uploaded_by' => auth()->id(),
-        ]);
-    }
 
     public function get_client(int $id): JsonResponse
     {

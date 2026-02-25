@@ -9,7 +9,7 @@
         <!-- Left: Logo + Brand -->
         <div class="cims-header-left">
             <div class="cims-header-brand">
-                <img src="{{ asset('assets/images/cims_core/atp_cims_logo.jpg') }}" alt="SmartDash CIMS" class="cims-header-logo">
+                <img src="{{ asset('assets/cims_core/atp_cims_logo.jpg') }}" alt="SmartDash CIMS" class="cims-header-logo">
                 <span class="cims-header-separator"></span>
                 <span class="cims-header-brand-name">SmartDash - CIMS 3000</span>
             </div>
@@ -52,7 +52,7 @@
 
             <!-- User Profile -->
             <div class="cims-header-profile">
-                <img src="{{ asset('assets/images/cims_core/user_profile.jpg') }}" alt="User" class="cims-profile-img">
+                <img src="{{ asset('assets/cims_core/user_profile.jpg') }}" alt="User" class="cims-profile-img">
             </div>
         </div>
 

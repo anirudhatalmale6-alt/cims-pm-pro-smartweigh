@@ -33,7 +33,7 @@
     <link href="/public/smartdash/vendor/toastr/css/toastr.min.css" rel="stylesheet">
     <link href="/public/smartdash/css/style.css" rel="stylesheet">
     <link href="/public/smartdash/css/smartdash-forms.css" rel="stylesheet">
-    <link href="/public/assets/css/style.css" rel="stylesheet">
+    <link href="/assets/css/style.css" rel="stylesheet">
 
     <style>
         /* =============================================
@@ -193,8 +193,8 @@
     };
 </script>
 
-<!-- CIMS Master Header -->
-@include('cimscore::partials.cims_master_header')
+<!-- CIMS Header -->
+@include('cimscore::partials.cims_header')
 
 <!-- CIMS Master Menu -->
 @include('cimscore::partials.cims_master_menu')

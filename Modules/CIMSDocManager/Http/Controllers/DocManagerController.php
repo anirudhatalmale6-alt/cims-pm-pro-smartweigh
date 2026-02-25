@@ -326,12 +326,11 @@ class DocManagerController extends Controller
     public function download($id)
     {
         $document = Document::findOrFail($id);
-        $filePath = storage_path('app/public/' . $document->file_path);
+        $filePath = base_path('../storage/' . $document->file_path);
 
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File not found.');
         }
-
 
         return response()->download($filePath, $document->file_stored_name);
     }
@@ -422,9 +421,8 @@ class DocManagerController extends Controller
         // dd($document);
         $document = Document::findOrFail($document);
 
-        $filePath = storage_path('app/public/' . $document->file_path);
+        $filePath = base_path('../storage/' . $document->file_path);
 
-        // dd($filePath);
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File not found.');
         }
@@ -445,9 +443,8 @@ class DocManagerController extends Controller
         $client = ClientMaster::findOrFail($client_id);
         $document = Document::where(['client_id'=>$client_id,'file_stored_name' => $client->{$document}])->get()->first();
 
-        $filePath = storage_path('app/public/' . $document->file_path);
+        $filePath = base_path('../storage/' . $document->file_path);
 
-        // dd($filePath);
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File not found.');
         }
