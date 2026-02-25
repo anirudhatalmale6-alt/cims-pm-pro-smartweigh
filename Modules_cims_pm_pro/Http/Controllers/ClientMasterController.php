@@ -1560,15 +1560,14 @@ class ClientMasterController extends Controller
         // Store the file
         $filePath = $file->storeAs($storagePath, $storedFilename, 'public');
 
-        // Copy file to web-accessible location (hosting has no symlink support)
-        $webStoragePath = public_path('storage/' . $storagePath);
-        if (!is_dir($webStoragePath)) {
-            mkdir($webStoragePath, 0755, true);
+        // Copy file to web-accessible location (public_path differs from actual web root on this hosting)
+        $webRootStorage = base_path('../public_html/storage/' . $storagePath);
+        if (!is_dir($webRootStorage)) {
+            mkdir($webRootStorage, 0755, true);
         }
         $sourcePath = storage_path('app/public/' . $filePath);
-        $destPath = $webStoragePath . '/' . $storedFilename;
         if (file_exists($sourcePath)) {
-            copy($sourcePath, $destPath);
+            copy($sourcePath, $webRootStorage . '/' . $storedFilename);
         }
 
         // Create the document record
@@ -1806,15 +1805,14 @@ class ClientMasterController extends Controller
         $storagePath = 'client_docs/'.$client->client_code;
         $filePath = $file->storeAs($storagePath, $storedFilename, 'public');
 
-        // Copy file to web-accessible location (hosting has no symlink support)
-        $webStoragePath = public_path('storage/' . $storagePath);
-        if (!is_dir($webStoragePath)) {
-            mkdir($webStoragePath, 0755, true);
+        // Copy file to web-accessible location (public_path differs from actual web root on this hosting)
+        $webRootStorage = base_path('../public_html/storage/' . $storagePath);
+        if (!is_dir($webRootStorage)) {
+            mkdir($webRootStorage, 0755, true);
         }
         $sourcePath = storage_path('app/public/' . $filePath);
-        $destPath = $webStoragePath . '/' . $storedFilename;
         if (file_exists($sourcePath)) {
-            copy($sourcePath, $destPath);
+            copy($sourcePath, $webRootStorage . '/' . $storedFilename);
         }
 
         return ClientMasterDocument::create([
