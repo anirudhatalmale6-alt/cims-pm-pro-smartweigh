@@ -1,0 +1,11 @@
+{
+    "name": "CIMS_Email",
+    "alias": "cims_email",
+    "description": "CIMS Email Module - Professional email compose, send, templates & client linking",
+    "keywords": ["email", "compose", "send", "templates", "client"],
+    "priority": 0,
+    "providers": [
+        "Modules\\CIMS_Email\\Providers\\CIMSEmailServiceProvider"
+    ],
+    "files": []
+}
