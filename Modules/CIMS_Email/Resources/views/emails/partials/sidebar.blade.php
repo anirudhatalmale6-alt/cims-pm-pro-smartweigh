@@ -24,6 +24,9 @@
             <a href="{{ route('cimsemail.templates') }}" class="list-group-item {{ ($activePage ?? '') == 'templates' ? 'active' : '' }}">
                 <span class="icon-warning"><i class="fa fa-circle" aria-hidden="true"></i></span> Templates
             </a>
+            <a href="{{ route('cimsemail.signature') }}" class="list-group-item {{ ($activePage ?? '') == 'signature' ? 'active' : '' }}">
+                <span class="icon-success"><i class="fa fa-circle" aria-hidden="true"></i></span> My Signature
+            </a>
             <a href="{{ route('cimsemail.settings') }}" class="list-group-item {{ ($activePage ?? '') == 'settings' ? 'active' : '' }}">
                 <span class="icon-primary"><i class="fa fa-circle" aria-hidden="true"></i></span> SMTP Settings
             </a>

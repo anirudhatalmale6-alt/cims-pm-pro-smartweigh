@@ -150,6 +150,15 @@ $(document).ready(function() {
                     'font-size': '14px',
                     'padding': '20px'
                 });
+
+                // Auto-append signature for new emails (not drafts)
+                @if(!$draft)
+                var sigHtml = @json($signatureHtml ?? '');
+                if (sigHtml) {
+                    var body = '<br><br><div class="email-signature" style="margin-top:20px;padding-top:10px;border-top:1px solid #eee;">' + sigHtml + '</div>';
+                    $('#ecBody').summernote('code', body);
+                }
+                @endif
             }
         }
     });

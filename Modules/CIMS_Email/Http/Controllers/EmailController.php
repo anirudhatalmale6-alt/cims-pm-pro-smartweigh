@@ -124,7 +124,11 @@ class EmailController extends Controller
         $selectedClientId = $request->get('client_id') ?? ($draft->client_id ?? null);
         $counts = $this->getFolderCounts();
 
-        return view('cims_email::emails.compose', compact('clients', 'templates', 'draft', 'selectedClientId', 'counts'));
+        // Get user's signature
+        $signature = $this->getUserSignature();
+        $signatureHtml = $this->buildSignatureHtml($signature);
+
+        return view('cims_email::emails.compose', compact('clients', 'templates', 'draft', 'selectedClientId', 'counts', 'signatureHtml'));
     }
 
     /**
@@ -520,5 +524,129 @@ class EmailController extends Controller
                 'message' => 'SMTP connection failed: ' . $e->getMessage()
             ]);
         }
+    }
+
+    // =========================================================================
+    // EMAIL SIGNATURES (Per User)
+    // =========================================================================
+
+    /**
+     * Get current user's signature from DB
+     */
+    private function getUserSignature()
+    {
+        try {
+            return DB::table('cims_email_signatures')
+                ->where('user_id', Auth::id())
+                ->where('is_active', 1)
+                ->first();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Build signature HTML from signature record
+     */
+    private function buildSignatureHtml($signature)
+    {
+        if (!$signature) return '';
+
+        // If user has custom HTML, use that
+        if (!empty($signature->signature_html)) {
+            return $signature->signature_html;
+        }
+
+        // Auto-generate from fields
+        $name = $signature->full_name ?? '';
+        $title = $signature->designation ?? '';
+        $phone = $signature->phone ?? '';
+        $mobile = $signature->mobile ?? '';
+        $company = $signature->company_name ?? '';
+        $website = $signature->company_website ?? '';
+
+        if (empty($name)) return '';
+
+        $html = '<table cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;color:#333;border-collapse:collapse;">';
+        $html .= '<tr><td style="padding-bottom:8px;border-bottom:2px solid #6853E8;">';
+        $html .= '<strong style="font-size:15px;color:#1a1a2e;">' . htmlspecialchars($name) . '</strong>';
+        if ($title) $html .= '<br><span style="font-size:12px;color:#666;">' . htmlspecialchars($title) . '</span>';
+        $html .= '</td></tr>';
+
+        $html .= '<tr><td style="padding-top:8px;">';
+        $contactParts = [];
+        if ($phone) $contactParts[] = 'Tel: ' . htmlspecialchars($phone);
+        if ($mobile) $contactParts[] = 'Mobile: ' . htmlspecialchars($mobile);
+        if (!empty($contactParts)) {
+            $html .= '<span style="font-size:12px;color:#555;">' . implode(' | ', $contactParts) . '</span><br>';
+        }
+        if ($company) {
+            $html .= '<strong style="font-size:12px;color:#1a1a2e;">' . htmlspecialchars($company) . '</strong>';
+            if ($website) {
+                $url = $website;
+                if (!preg_match('/^https?:\/\//', $url)) $url = 'https://' . $url;
+                $html .= ' | <a href="' . $url . '" style="font-size:12px;color:#6853E8;text-decoration:none;">' . htmlspecialchars($website) . '</a>';
+            }
+            $html .= '<br>';
+        }
+        $html .= '</td></tr></table>';
+
+        return $html;
+    }
+
+    /**
+     * Signature editor page
+     */
+    public function signature()
+    {
+        $signature = $this->getUserSignature();
+        $counts = $this->getFolderCounts();
+
+        return view('cims_email::emails.signature', compact('signature', 'counts'));
+    }
+
+    /**
+     * Save signature
+     */
+    public function saveSignature(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:200',
+            'designation' => 'required|string|max:200',
+        ]);
+
+        $data = [
+            'user_id' => Auth::id(),
+            'full_name' => $request->full_name,
+            'designation' => $request->designation,
+            'phone' => $request->phone ?? '',
+            'mobile' => $request->mobile ?? '',
+            'company_name' => $request->company_name ?? '',
+            'company_website' => $request->company_website ?? '',
+            'signature_html' => $request->signature_html ?? '',
+            'is_active' => 1,
+            'updated_at' => now(),
+        ];
+
+        $existing = DB::table('cims_email_signatures')->where('user_id', Auth::id())->first();
+
+        if ($existing) {
+            DB::table('cims_email_signatures')->where('id', $existing->id)->update($data);
+        } else {
+            $data['created_at'] = now();
+            DB::table('cims_email_signatures')->insert($data);
+        }
+
+        return redirect()->route('cimsemail.signature')->with('success', 'Email signature saved!');
+    }
+
+    /**
+     * Get signature HTML (AJAX - for compose page)
+     */
+    public function getSignatureHtml()
+    {
+        $signature = $this->getUserSignature();
+        $html = $this->buildSignatureHtml($signature);
+        return response()->json(['html' => $html]);
     }
 }
