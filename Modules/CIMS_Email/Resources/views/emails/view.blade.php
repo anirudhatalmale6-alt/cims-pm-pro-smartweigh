@@ -14,33 +14,10 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-xl-3 col-xxl-4">
-                                <div class="email-left-box email-left-body">
-                                    <div class="generic-width px-0 mb-5 mt-4 mt-sm-0">
-                                        <div class="p-0">
-                                            <a href="{{ route('cimsemail.compose') }}" class="btn btn-primary btn-block">Compose</a>
-                                        </div>
-                                        <div class="mail-list rounded mt-4">
-                                            <a href="{{ route('cimsemail.sent') }}" class="list-group-item"><i
-                                                    class="fa fa-paper-plane font-18 align-middle me-2"></i> Sent</a>
-                                            <a href="{{ route('cimsemail.drafts') }}" class="list-group-item"><i
-                                                    class="mdi mdi-file-document-box font-18 align-middle me-2"></i> Drafts</a>
-                                            <a href="{{ route('cimsemail.index', ['folder' => 'trash']) }}" class="list-group-item"><i
-                                                    class="fa fa-trash font-18 align-middle me-2"></i> Trash</a>
-                                        </div>
-                                        <div class="mail-list rounded overflow-hidden mt-4">
-                                            <div class="intro-title d-flex justify-content-between mt-0">
-                                                <h5>Manage</h5>
-                                            </div>
-                                            <a href="{{ route('cimsemail.templates') }}" class="list-group-item"><span class="icon-primary"><i
-                                                        class="fa fa-circle" aria-hidden="true"></i></span>
-                                                Templates</a>
-                                        </div>
-                                    </div>
-                                </div>
+                                @include('cims_email::emails.partials.sidebar')
                             </div>
                             <div class="col-xl-9 col-xxl-8">
                                 <div>
-
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="right-box-padding">
@@ -84,11 +61,7 @@
                                                             <div class="media-body me-2">
                                                                 <h5 class="text-primary mb-0 mt-1">{{ implode(', ', $toList) }}</h5>
                                                                 <p class="mb-0">
-                                                                    @if($email->sent_at)
-                                                                        {{ \Carbon\Carbon::parse($email->sent_at)->format('d M Y H:i') }}
-                                                                    @else
-                                                                        {{ \Carbon\Carbon::parse($email->created_at)->format('d M Y H:i') }}
-                                                                    @endif
+                                                                    {{ $email->sent_at ? \Carbon\Carbon::parse($email->sent_at)->format('d M Y, H:i') : \Carbon\Carbon::parse($email->created_at)->format('d M Y, H:i') }}
                                                                 </p>
                                                                 <span class="badge badge-sm light {{ $email->status == 'sent' ? 'badge-success' : ($email->status == 'failed' ? 'badge-danger' : 'badge-warning') }} mt-1">{{ ucfirst($email->status) }}</span>
                                                                 @if($client)
@@ -105,7 +78,7 @@
                                                                 @csrf
                                                                 <button type="submit" data-bs-toggle="tooltip"
                                                                     data-bs-title="Delete"
-                                                                    class="btn btn-primary px-3 my-1 light me-2"><i
+                                                                    class="btn btn-primary px-3 my-1 light"><i
                                                                         class="fa fa-trash"></i></button>
                                                             </form>
                                                         </div>
@@ -114,9 +87,7 @@
                                                     <div class="media mb-2 mt-3">
                                                         <div class="media-body">
                                                             <span class="pull-end">
-                                                                @if($email->sent_at)
-                                                                    {{ \Carbon\Carbon::parse($email->sent_at)->format('h:i A') }}
-                                                                @endif
+                                                                {{ $email->sent_at ? \Carbon\Carbon::parse($email->sent_at)->format('h:i A') : '' }}
                                                             </span>
                                                             <h5 class="my-1 text-primary">{{ $email->subject ?: '(no subject)' }}</h5>
                                                             <p class="read-content-email">
@@ -133,7 +104,6 @@
                                                         {!! $email->body_html !!}
                                                     </div>
 
-                                                    {{-- Attachments --}}
                                                     @if($attachments->count() > 0)
                                                     <hr>
                                                     <div class="mb-3">
@@ -150,6 +120,7 @@
                                                     </div>
                                                     @endif
 
+                                                    <hr>
                                                     <div class="read-content-attachment">
                                                         <a href="{{ route('cimsemail.compose', ['client_id' => $email->client_id]) }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-reply me-1"></i>New Email</a>
                                                     </div>
@@ -170,10 +141,7 @@
 
 @push('scripts')
 <script>
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 </script>
 @endpush

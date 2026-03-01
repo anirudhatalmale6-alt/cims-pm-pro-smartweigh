@@ -31,5 +31,10 @@ Route::put('templates/{id}', [EmailController::class, 'updateTemplate'])->name('
 Route::delete('templates/{id}', [EmailController::class, 'deleteTemplate'])->name('templates.delete');
 Route::get('templates/{id}/load', [EmailController::class, 'loadTemplate'])->name('templates.load');
 
+// SMTP Settings
+Route::get('settings', [EmailController::class, 'settings'])->name('settings');
+Route::post('settings/save', [EmailController::class, 'saveSettings'])->name('settings.save');
+Route::post('settings/test', [EmailController::class, 'testConnection'])->name('settings.test');
+
 // AJAX
 Route::get('ajax/client-contacts/{clientId}', [EmailController::class, 'getClientContacts'])->name('ajax.client-contacts');

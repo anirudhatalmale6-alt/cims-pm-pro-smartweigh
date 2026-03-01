@@ -7,11 +7,57 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class EmailController extends Controller
 {
+    /**
+     * Boot SMTP settings from database on each request
+     */
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $this->loadSmtpSettings();
+            return $next($request);
+        });
+    }
+
+    /**
+     * Load SMTP settings from DB and apply to mail config
+     */
+    private function loadSmtpSettings()
+    {
+        try {
+            $settings = DB::table('cims_email_settings')->pluck('setting_value', 'setting_key')->toArray();
+            if (!empty($settings['smtp_host'])) {
+                Config::set('mail.default', 'smtp');
+                Config::set('mail.mailers.smtp.host', $settings['smtp_host']);
+                Config::set('mail.mailers.smtp.port', $settings['smtp_port'] ?? 587);
+                Config::set('mail.mailers.smtp.encryption', $settings['smtp_encryption'] ?? 'tls');
+                Config::set('mail.mailers.smtp.username', $settings['smtp_username'] ?? '');
+                Config::set('mail.mailers.smtp.password', $settings['smtp_password'] ?? '');
+                Config::set('mail.from.address', $settings['from_email'] ?? $settings['smtp_username']);
+                Config::set('mail.from.name', $settings['from_name'] ?? 'SmartWeigh CIMS');
+            }
+        } catch (\Exception $e) {
+            // Table may not exist yet - silently continue
+        }
+    }
+
+    /**
+     * Get folder counts for sidebar
+     */
+    private function getFolderCounts()
+    {
+        return [
+            'sent' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'sent')->whereNull('deleted_at')->count(),
+            'drafts' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'drafts')->whereNull('deleted_at')->count(),
+            'trash' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'trash')->whereNull('deleted_at')->count(),
+        ];
+    }
+
     /**
      * Email Dashboard - shows sent emails (default view)
      */
@@ -40,18 +86,12 @@ class EmailController extends Controller
 
         $emails = $query->orderByDesc('created_at')->paginate(20);
 
-        // Get clients for filter dropdown
         $clients = DB::table('client_master')
             ->where('is_active', 1)
             ->orderBy('company_name')
             ->get(['client_id', 'client_code', 'company_name']);
 
-        // Folder counts
-        $counts = [
-            'sent' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'sent')->whereNull('deleted_at')->count(),
-            'drafts' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'drafts')->whereNull('deleted_at')->count(),
-            'trash' => DB::table('cims_emails')->where('user_id', Auth::id())->where('folder', 'trash')->whereNull('deleted_at')->count(),
-        ];
+        $counts = $this->getFolderCounts();
 
         return view('cims_email::emails.index', compact('emails', 'folder', 'search', 'clients', 'clientFilter', 'counts'));
     }
@@ -72,7 +112,6 @@ class EmailController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Check if editing a draft
         $draft = null;
         if ($request->has('draft_id')) {
             $draft = DB::table('cims_emails')
@@ -82,10 +121,10 @@ class EmailController extends Controller
                 ->first();
         }
 
-        // Pre-fill client if provided
         $selectedClientId = $request->get('client_id') ?? ($draft->client_id ?? null);
+        $counts = $this->getFolderCounts();
 
-        return view('cims_email::emails.compose', compact('clients', 'templates', 'draft', 'selectedClientId'));
+        return view('cims_email::emails.compose', compact('clients', 'templates', 'draft', 'selectedClientId', 'counts'));
     }
 
     /**
@@ -104,15 +143,15 @@ class EmailController extends Controller
         $bccEmails = $request->bcc_emails ? array_map('trim', explode(',', $request->bcc_emails)) : [];
 
         $user = Auth::user();
-        $fromEmail = $request->from_email ?: ($user->email ?? config('mail.from.address', 'noreply@smartweigh.co.za'));
-        $fromName = ($user->first_name ?? '') . ' ' . ($user->last_name ?? '');
+        $fromEmail = config('mail.from.address', $user->email ?? 'noreply@smartweigh.co.za');
+        $fromName = config('mail.from.name', trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: 'SmartWeigh');
 
         // Store the email record
         $emailId = DB::table('cims_emails')->insertGetId([
             'client_id' => $request->client_id ?: null,
             'user_id' => Auth::id(),
             'from_email' => $fromEmail,
-            'from_name' => trim($fromName) ?: 'SmartWeigh',
+            'from_name' => $fromName,
             'to_emails' => json_encode($toEmails),
             'cc_emails' => json_encode($ccEmails),
             'bcc_emails' => json_encode($bccEmails),
@@ -151,7 +190,7 @@ class EmailController extends Controller
                 ->get();
 
             Mail::html($request->body_html, function ($message) use ($toEmails, $ccEmails, $bccEmails, $fromEmail, $fromName, $request, $attachments) {
-                $message->from($fromEmail, trim($fromName) ?: 'SmartWeigh');
+                $message->from($fromEmail, $fromName);
                 $message->to($toEmails);
                 if (!empty($ccEmails)) $message->cc($ccEmails);
                 if (!empty($bccEmails)) $message->bcc($bccEmails);
@@ -171,7 +210,6 @@ class EmailController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // If editing a draft, delete it
             if ($request->draft_id) {
                 DB::table('cims_emails')->where('id', $request->draft_id)->update([
                     'deleted_at' => now(),
@@ -257,21 +295,20 @@ class EmailController extends Controller
 
         if (!$email) abort(404);
 
-        // Mark as read
         DB::table('cims_emails')->where('id', $id)->update(['is_read' => 1]);
 
-        // Get attachments
         $attachments = DB::table('cims_email_attachments')
             ->where('email_id', $id)
             ->get();
 
-        // Get linked client
         $client = null;
         if ($email->client_id) {
             $client = DB::table('client_master')->where('client_id', $email->client_id)->first(['client_id', 'client_code', 'company_name']);
         }
 
-        return view('cims_email::emails.view', compact('email', 'attachments', 'client'));
+        $counts = $this->getFolderCounts();
+
+        return view('cims_email::emails.view', compact('email', 'attachments', 'client', 'counts'));
     }
 
     /**
@@ -310,7 +347,9 @@ class EmailController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('cims_email::emails.templates', compact('templates'));
+        $counts = $this->getFolderCounts();
+
+        return view('cims_email::emails.templates', compact('templates', 'counts'));
     }
 
     /**
@@ -397,5 +436,89 @@ class EmailController extends Controller
         }
 
         return response()->json($contacts);
+    }
+
+    /**
+     * SMTP Settings page
+     */
+    public function settings()
+    {
+        $settings = [];
+        try {
+            $settings = DB::table('cims_email_settings')->pluck('setting_value', 'setting_key')->toArray();
+        } catch (\Exception $e) {
+            // Table may not exist
+        }
+
+        $counts = $this->getFolderCounts();
+
+        return view('cims_email::emails.settings', compact('settings', 'counts'));
+    }
+
+    /**
+     * Save SMTP Settings
+     */
+    public function saveSettings(Request $request)
+    {
+        $request->validate([
+            'smtp_host' => 'required|string',
+            'smtp_port' => 'required|string',
+            'smtp_encryption' => 'nullable|string',
+            'smtp_username' => 'required|string',
+            'smtp_password' => 'required|string',
+            'from_email' => 'required|email',
+            'from_name' => 'required|string',
+        ]);
+
+        $keys = ['smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password', 'from_email', 'from_name'];
+
+        foreach ($keys as $key) {
+            DB::table('cims_email_settings')->updateOrInsert(
+                ['setting_key' => $key],
+                ['setting_value' => $request->input($key, ''), 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('cimsemail.settings')->with('success', 'SMTP settings saved successfully!');
+    }
+
+    /**
+     * Test SMTP connection (AJAX)
+     */
+    public function testConnection(Request $request)
+    {
+        try {
+            // Temporarily configure SMTP
+            Config::set('mail.default', 'smtp');
+            Config::set('mail.mailers.smtp.host', $request->smtp_host);
+            Config::set('mail.mailers.smtp.port', $request->smtp_port);
+            Config::set('mail.mailers.smtp.encryption', $request->smtp_encryption ?: null);
+            Config::set('mail.mailers.smtp.username', $request->smtp_username);
+            Config::set('mail.mailers.smtp.password', $request->smtp_password);
+
+            // Purge the smtp mailer to force re-creation with new config
+            app('mail.manager')->purge('smtp');
+
+            $fromEmail = $request->from_email ?: $request->smtp_username;
+            $fromName = $request->from_name ?: 'SmartWeigh CIMS';
+
+            // Send a test email to the from address
+            Mail::raw('This is a test email from CIMS Email Module. If you receive this, your SMTP settings are working correctly!', function ($message) use ($fromEmail, $fromName) {
+                $message->from($fromEmail, $fromName);
+                $message->to($fromEmail);
+                $message->subject('CIMS Email - SMTP Test (' . now()->format('d M Y H:i') . ')');
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SMTP connection successful! A test email was sent to ' . $fromEmail
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SMTP connection failed: ' . $e->getMessage()
+            ]);
+        }
     }
 }
